@@ -8,9 +8,9 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -51,18 +51,11 @@ public class UserController {
 		return fetchedUser;
 	}
 	
-	@PostMapping
-	public User createUser(@RequestBody User user) {
-		
-		User savedUser = userService.registerUser(user);
-		return savedUser;
-	}
-	
-	@PutMapping(path = "/{id}")
-	public User updateUser(@RequestBody User user, @PathVariable("id") Integer id) {
-		
-		if(id != null) {
-			User updatedUser = userService.updateUser(user, id);
+	@PutMapping
+	public User updateUser(@RequestBody User user, @RequestHeader("Authorization") String token) {
+		if(token != null) {
+			Integer userForJwt = userService.findUserByJwt(token);
+			User updatedUser = userService.updateUser(user, userForJwt);
 			return updatedUser;
 		}
 		
@@ -83,6 +76,15 @@ public class UserController {
 	public User followUserHandler(@PathVariable("followerId") Integer followerId, @PathVariable Integer followingId) {
 		
 		User followingUser = userService.followUser(followerId, followingId);
+		return followingUser;
+	}
+	
+	@PutMapping(path = "/follow/{followingId}")
+	public User followHandler(@RequestHeader("Authorization") String token, @PathVariable("followingId") Integer followingId) {
+		
+		Integer followerId = userService.findUserByJwt(token);
+		User followingUser = userService.followUser(followerId, followingId);
+		
 		return followingUser;
 	}
 	

@@ -6,8 +6,10 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.palamahen.app.config.JwtProvider;
 import com.palamahen.app.model.User;
 import com.palamahen.app.repository.UserRepository;
 
@@ -16,21 +18,30 @@ public class UserServiceImpl implements UserService {
 	
 	@Autowired
 	UserRepository urepo;
+	
+	@Autowired
+	private PasswordEncoder passwordEncoder;
 
 	@Override
 	public User registerUser(User user) {
 		
-		User newUser = new User();
-		newUser.setEmail(user.getEmail());
-		newUser.setFirstName(user.getFirstName());
-		newUser.setId(user.getId());
-		newUser.setLastName(user.getLastName());
-		newUser.setPassword(user.getPassword());
-		newUser.setGender(user.getGender());
+		User userExists = findUserByEmail(user.getEmail());
 		
-		User registeredUser = urepo.save(newUser);
+		if(userExists == null) {
+			
+			User newUser = new User();
+			newUser.setEmail(user.getEmail());
+			newUser.setFirstName(user.getFirstName());
+			newUser.setLastName(user.getLastName());
+			newUser.setPassword(passwordEncoder.encode(user.getPassword()));
+			newUser.setGender(user.getGender());
+			
+			User registeredUser = urepo.save(newUser);
+			
+			return registeredUser;
+		}
 		
-		return registeredUser;
+		return userExists;
 	}
 	
 	@Override
@@ -100,6 +111,15 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public List<User> searchUser(String query) {
 		return urepo.searchUser(query);
+	}
+	
+	@Override
+	public Integer findUserByJwt(String jwt) {
+		
+		String email = JwtProvider.getEmailFromJwt(jwt);
+		User jwtUser = findUserByEmail(email);
+		
+		return jwtUser.getId();
 	}
 
 }

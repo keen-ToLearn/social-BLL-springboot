@@ -6,6 +6,8 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
@@ -19,12 +21,16 @@ public class SocialConfig {
 		http.sessionManagement(management -> management
 				.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 			.authorizeHttpRequests(authorize -> authorize
-				.requestMatchers(HttpMethod.POST, "/users").permitAll()
-				.requestMatchers("/api/**").authenticated()
-				.anyRequest().permitAll())
+				.requestMatchers(HttpMethod.POST, "/auth/**").permitAll()
+				.anyRequest().authenticated())
 			.addFilterBefore(new JwtValidator(), BasicAuthenticationFilter.class)
 			.csrf(csrf -> csrf.disable());
 		
 		return http.build();
+	}
+	
+	@Bean
+	PasswordEncoder passwordEncoder() {
+		return new BCryptPasswordEncoder();
 	}
 }

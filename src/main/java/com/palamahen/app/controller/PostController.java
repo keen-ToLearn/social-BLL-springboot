@@ -11,12 +11,14 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.palamahen.app.dto.StatusResponseDTO;
 import com.palamahen.app.model.Post;
 import com.palamahen.app.service.PostService;
+import com.palamahen.app.service.UserService;
 
 @RestController
 @RequestMapping(path = "/posts")
@@ -24,6 +26,9 @@ public class PostController {
 	
 	@Autowired
 	PostService postService;
+	
+	@Autowired
+	UserService userService;
 	
 	@GetMapping
 	public List<Post> getPosts() {
@@ -49,19 +54,21 @@ public class PostController {
 		return userPostListResponse;
 	}
 	
-	@PostMapping(path = "/user/{userId}")
-	public ResponseEntity<Post> savePost(@RequestBody Post post, @PathVariable("userId") Integer userId) {
+	@PostMapping
+	public ResponseEntity<Post> savePost(@RequestBody Post post, @RequestHeader("Authorization") String token) {
 		
-		Post newPost = postService.createPost(post, userId);
+		Integer creatorId = userService.findUserByJwt(token);
+		Post newPost = postService.createPost(post, creatorId);
 		
 		ResponseEntity<Post> newPostResponse = new ResponseEntity<Post>(newPost, HttpStatus.OK);
 		
 		return newPostResponse;
 	}
 	
-	@DeleteMapping(path = "/{postId}/user/{userId}")
-	public ResponseEntity<StatusResponseDTO> removePost(@PathVariable("postId") Integer pid, @PathVariable("userId") Integer uid) {
+	@DeleteMapping(path = "/{postId}")
+	public ResponseEntity<StatusResponseDTO> removePost(@PathVariable("postId") Integer pid, @RequestHeader("Authorization") String token) {
 		
+		Integer uid = userService.findUserByJwt(token);
 		String deleteStatus = postService.deletePost(pid, uid);
 		
 		StatusResponseDTO deleteStatusBody = new StatusResponseDTO(true, deleteStatus);
@@ -71,20 +78,22 @@ public class PostController {
 		return deletePostResponse;
 	}
 	
-	@PutMapping(path = "/{postId}/save/user/{userId}")
-	public ResponseEntity<Post> savePostForUser(@PathVariable("postId") Integer postId, @PathVariable("userId") Integer userId) {
+	@PutMapping(path = "/{postId}/save")
+	public ResponseEntity<Post> savePostForUser(@PathVariable("postId") Integer postId, @RequestHeader("Authorization") String token) {
 		
-		Post savedUserPost = postService.savePost(postId, userId);
+		Integer saverId = userService.findUserByJwt(token);
+		Post savedUserPost = postService.savePost(postId, saverId);
 		
 		ResponseEntity<Post> savePostResponse = new ResponseEntity<Post>(savedUserPost, HttpStatus.OK);
 		
 		return savePostResponse;
 	}
 	
-	@PutMapping(path = "/{postId}/like/user/{userId}")
-	public ResponseEntity<Post> likePostForUser(@PathVariable("postId") Integer postId, @PathVariable("userId") Integer userId) {
+	@PutMapping(path = "/{postId}/like")
+	public ResponseEntity<Post> likePostForUser(@PathVariable("postId") Integer postId, @RequestHeader("Authorization") String token) {
 		
-		Post likedUserPost = postService.likePost(postId, userId);
+		Integer likerId = userService.findUserByJwt(token);
+		Post likedUserPost = postService.likePost(postId, likerId);
 		
 		ResponseEntity<Post> likePostResponse = new ResponseEntity<Post>(likedUserPost, HttpStatus.OK);
 		
