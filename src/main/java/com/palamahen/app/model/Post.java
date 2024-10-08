@@ -11,6 +11,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 @Entity
@@ -32,13 +33,17 @@ public class Post {
 	@JsonIgnore
 	@ManyToMany
 	private List<User> likedBy;
+
+	@JsonIgnore
+	@OneToMany
+	private List<Comment> comments;
 	
 	public Post() {
 		
 	}
 
 	public Post(Integer postId, User postBy, String caption, String imageURL, String videoURL,
-			LocalDateTime timestamp, List<User> likedBy) {
+			LocalDateTime timestamp, List<User> likedBy, List<Comment> comments) {
 		super();
 		this.postId = postId;
 		this.postBy = postBy;
@@ -47,6 +52,7 @@ public class Post {
 		this.videoURL = videoURL;
 		this.timestamp = timestamp;
 		this.likedBy = likedBy;
+		this.comments = comments;
 	}
 
 	public Integer getPostId() {
@@ -103,6 +109,14 @@ public class Post {
 
 	public void setLikedBy(List<User> likedBy) {
 		this.likedBy = likedBy;
+	}
+	
+	public List<Comment> getComments() {
+		return comments;
+	}
+
+	public void setComments(List<Comment> comments) {
+		this.comments = comments;
 	}
 	
 }
